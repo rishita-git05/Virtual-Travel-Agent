@@ -73,12 +73,12 @@ def build_app():
     def reset_chat():
         return [], None, "Waiting for input.", {}
 
-    with gr.Blocks(title="Virtual Travel Agent Copilot", theme=gr.themes.Soft()) as demo:
+    with gr.Blocks(title="Virtual Travel Agent Copilot") as demo:
         gr.Markdown("# ✈️ Virtual Travel Agent Copilot\n### Your AI-powered multi-agent travel planning assistant")
         request_state = gr.State(None)
         with gr.Row():
             with gr.Column(scale=3):
-                chatbot = gr.Chatbot(label="Travel Assistant", type="messages", height=520)
+                chatbot = gr.Chatbot(label="Travel Assistant", height=520)
                 user_input = gr.Textbox(label="Your message", placeholder="Plan a 5-day trip from London to Tokyo...", lines=2)
                 with gr.Row():
                     send = gr.Button("Send", variant="primary")
@@ -96,4 +96,4 @@ def build_app():
 
 if __name__ == "__main__":
     app = build_app()
-    app.launch(server_name="0.0.0.0", server_port=7860)
+    app.launch(server_name="0.0.0.0", server_port=7860, theme=gr.themes.Soft())

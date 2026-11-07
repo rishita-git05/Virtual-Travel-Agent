@@ -21,6 +21,10 @@ class LLMClient:
 
     def generate(self, prompt, system_prompt=None, provider="groq"):
 
+        print("LLM prompt length:", len(prompt))
+        print("LLM prompt size (KB):", len(prompt.encode("utf-8")) / 1024)
+        print("System prompt length:", len(system_prompt or ""))
+        
         if provider not in self.models:
             raise ValueError(f"Unsupported provider: {provider}")
 
@@ -72,7 +76,10 @@ class LLMClient:
             timeout=60
         )
 
-        response.raise_for_status()
+        if not response.ok:
+            raise RuntimeError(
+                f"HTTP {response.status_code}: {response.text[:1000]}"
+            )
 
         result = response.json()
 
@@ -143,16 +150,27 @@ class LLMClient:
             return self.generate(
                 prompt,
                 system_prompt,
-                provider=PRIMARY_PROVIDER
+                provider="groq"
             )
 
-        except (requests.RequestException, RuntimeError, ValueError) as primary_error:
+        except Exception as primary_error:
+            print(f"Groq failed: {repr(primary_error)}")
 
-            print(
-                f"Primary provider failed. "
-                f"Trying {FALLBACK_PROVIDER}..."
-            )
+            try:
+                return self.generate(
+                    prompt,
+                    system_prompt,
+                    provider="gemini"
+                )
+            except Exception as fallback_error:
+                print(f"Gemini failed: {repr(fallback_error)}")
 
+                raise RuntimeError(
+                    f"Both LLM providers failed.\n"
+                    f"Groq: {primary_error}\n"
+                    f"Gemini: {fallback_error}"
+                )
+        
             try:
                 result = self.generate(
                     prompt,
@@ -271,7 +289,10 @@ def _generate_gemini(self, prompt, system_prompt, api_key, model):
         timeout=60
     )
 
-    response.raise_for_status()
+    if not response.ok:
+        raise RuntimeError(
+            f"HTTP {response.status_code}: {response.text[:1000]}"
+        )
 
     result = response.json()
 
